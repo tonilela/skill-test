@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_HOST: ${DATABASE_HOST}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  server:
+    build: ./skill-test-backend
+    command: /bin/sh -c "npx sequelize db:migrate && npm run dev"
+    volumes:
+      - ./skill-test-backend:/app
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    environment:
+      PORT: ${BACKEND_PORT}
+      SECRET_KEY: ${SECRET_KEY}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      - db
+
+  client:
+    build: ./skill-test-frontend
+    volumes:
+      - ./skill-test-frontend:/app
+      - /app/node_modules
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    depends_on:
+      - server
+    environment:
+      REACT_APP_BACKEND_URL: ${BACKEND_URL}
+      REACT_APP_FRONTEND_PORT: ${FRONTEND_PORT}
+
+volumes:
+  db-data:
