@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const bcryptjs= require("bcryptjs")
 const jwt = require('jsonwebtoken');
+
 const db = require('../../../databse/models');
 const User = db.User;
+const validate = require('../../middleware/joiValidation');
+const { registerSchema, loginSchema } = require('../../schemas/userSchemas');
+
 
 const mailgun = require('mailgun-js');
 
@@ -13,7 +17,7 @@ const mg = mailgun({
   apiKey: process.env.MAILGUN_API_KEY
 });
 
-router.post('/register', async (req, res) => {
+router.post('/register', validate(registerSchema), async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
@@ -45,7 +49,7 @@ router.post('/register', async (req, res) => {
 });
 
 
-router.post('/login', async (req, res) => {
+router.post('/login', validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
